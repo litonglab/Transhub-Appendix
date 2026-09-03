@@ -344,8 +344,8 @@ exit
 #退出mahimahi目录，回到用户目录
 cd ..
 #下载transhub代码
-git clone https://github.com/litonglab/transhub_local_env.git
-cd transhub_local_env
+git clone https://github.com/litonglab/cc-training.git
+cd cc-training
 #按常规方式编译代码
 ./autogen.sh && ./configure && make
 ```
@@ -466,7 +466,7 @@ queueing delay 和 throughput 随时间变化的折线图。
 
 ```bash
 sudo sysctl -w net.ipv4.ip_forward=1 #（必须启用Linux的IP转发才能使mahimahi工作）
-cd datagrump #（前提已经在transhub_local_env目录下）
+cd datagrump #（前提已经在cc-training目录下）
 ./run-contest [scheme_name] #（scheme_name就是你给自己文件命名的名称，第一次使用时可以将[scheme_name] 替换为controller.cc）
 ```
 
@@ -552,108 +552,6 @@ Mac 可通过以下方式找到容器内文件：
 
 ![image_2025-07-10_17-58-05](./images/image_2025-07-10_17-58-05.png)
 
-## 4. 系统拥塞控制算法配置（可选）
-
-本节内容介绍了如何查看并修改系统拥塞控制算法，属于**拓展阅读**部分。
-
-Linux 系统中可选的拥塞控制算法包括 `reno`、`cubic`、`bbr`等。本节以配置 `bbr`算法为例：
-
-❗ 配置不同的拥塞控制算法会对传输结果产生不同的影响，可做相关实验验证（此处所指**实验并非**本 transhub 中的 `run-contest`
-实验，`run-contest`的拥塞控制算法为 `controller.cc`,与系统拥塞控制算法无关。如需验证系统拥塞控制算法，可使用 `iperf`
-等工具来做相关实验）。
-
-### 4.1. 通过方式一安装的操作过程
-
-💡 在 Linux 主机上启用 BBR 算法
-
-```bash
-# 查看系统支持的拥塞控制算法
-sudo sysctl net.ipv4.tcp_available_congestion_control
-# 输出结果：表明当前系统支持reno cubic算法
-# net.ipv4.tcp_available_congestion_control = reno cubic
-
-# 查看系统当前使用的拥塞控制算法
-sudo sysctl net.ipv4.tcp_congestion_control
-# 输出结果：表明当前系统使用cubic算法
-# net.ipv4.tcp_congestion_control = cubic
-
-# 切换到BBR
-sudo sysctl net.core.default_qdisc=fq
-sudo sysctl net.ipv4.tcp_congestion_control=bbr
-# 查看是否切换成功
-sudo sysctl net.ipv4.tcp_congestion_control
-
-# 切换回CUBIC
-sudo sysctl net.core.default_qdisc=pfifo
-sudo sysctl net.ipv4.tcp_congestion_control=cubic
-# 查看是否切换成功
-sudo sysctl net.ipv4.tcp_congestion_control
-```
-
-### 4.2. 通过方式二安装的操作过程
-
-💡 在 Docker 容器中启用 BBR 算法
-
-**附相关知识点：Docker 容器共享主机内核**：
-
-- Docker 容器共享宿主机的内核，因此容器内的网络配置（如拥塞控制算法）受宿主机内核限制。
-- 如果宿主机内核不支持 BBR，容器内也无法使用 BBR。
-
-> Docker在macOS上和Windows上跑Linux docker都是先套了个虚拟机，虚拟机里跑Linux提供kernel，再在里面跑docker。例如目前虚拟机在Windows上是Hyper-V或者WSL。
-
-**拥塞控制算法**属于**内核算法**，所以在 Docker 容器能够使用的拥塞控制算法受**宿主机内核**确定。bbr算法是较新的算法，并非在所有内核都支持。
-
-使用命令 `sysctl net.ipv4.tcp_available_congestion_control`查看当前支持的拥塞控制算法：
-
-```bash
-# 查看系统支持的拥塞控制算法
-sysctl net.ipv4.tcp_available_congestion_control
-# 输出结果：表明当前系统支持reno cubic算法
-# net.ipv4.tcp_available_congestion_control = reno cubic
-```
-
-- 如是 Linux 宿主机，可按照 3.1 节方法开启宿主机 bbr 算法，在容器中也将变更为 bbr 算法。
-- Mac 若是使用 Orbstack 的容器，可尝试使用 reno 或 cubic 算法。目前暂时没找到打开 bbr 的方法，因为容器内开启 bbr 算法需要**宿主机内核**支持。而在 Orbstack 中，该内核实际上是由 Orbstack 提供的**定制化的内置 Linux 内核**，用户无法修改。
-- Windows Docker 若是使用 WSL 后端，暂时不支持该操作。
-
-在 Docker 中切换拥塞控制算法的命令如下：
-
-```bash
-# 查看系统支持的拥塞控制算法
-sysctl net.ipv4.tcp_available_congestion_control
-# 输出结果：表明当前系统支持reno cubic算法
-# net.ipv4.tcp_available_congestion_control = reno cubic
-
-# 查看系统当前使用的拥塞控制算法
-sysctl net.ipv4.tcp_congestion_control
-# 输出结果：表明当前系统使用cubic算法
-# net.ipv4.tcp_congestion_control = cubic
-
-#===========若内核支持BBR，使用以下命令切换到BBR以及切回CUBIC
-# 切换到BBR
-sysctl net.core.default_qdisc=fq
-sysctl net.ipv4.tcp_congestion_control=bbr
-# 查看是否切换成功
-sysctl net.ipv4.tcp_congestion_control
-
-# 切换回CUBIC
-sudo sysctl net.core.default_qdisc=pfifo
-sudo sysctl net.ipv4.tcp_congestion_control=cubic
-# 查看是否切换成功
-sudo sysctl net.ipv4.tcp_congestion_control
-
-#===========若内核不支持BBR，例如使用Orbstack，使用以下命令切换到RENO以及切回CUBIC
-# 切换到RENO
-sysctl net.ipv4.tcp_congestion_control=reno
-
-# 切换到CUBIC
-sysctl net.ipv4.tcp_congestion_control=cubic
-```
-
-![image-20250603下午61359463](./images/image-20250603下午61359463.png)
-
-
-
 # 常见问题
 
 ## 1. 竞赛平台问题
@@ -721,4 +619,4 @@ Ubuntu20、22 版本也可正常完成 transhub 安装，但在运行实验时�
 
 ------
 
-本文档更新时间：2025 年 07 月 28日 星期一
+本文档更新时间：2026 年 09 月 03日 星期四

@@ -181,8 +181,8 @@ exit
 #退出mahimahi目录，回到用户目录
 cd ..
 #下载transhub代码
-git clone https://github.com/litonglab/transhub_local_env.git 
-cd transhub_local_env
+git clone https://github.com/litonglab/cc-training.git 
+cd cc-training
 #按常规方式编译代码
 ./autogen.sh && ./configure && make 
 ```
@@ -320,7 +320,7 @@ ls
 
 ```Bash
 sudo sysctl -w net.ipv4.ip_forward=1 #（必须启用Linux的IP转发才能使mahimahi工作）
-cd datagrump #（前提已经在transhub_local_env目录下）
+cd datagrump #（前提已经在cc-training目录下）
 ./run-contest [scheme_name] #（scheme_name就是你给自己文件命名的名称，第一次使用时可以将[scheme_name] 替换为controller.cc）
 ```
 
@@ -529,7 +529,7 @@ sysctl net.ipv4.tcp_congestion_control=cubic
 
 ---
 
-本文档更新时间：2026年03月01日 星期日 15:00
+本文档更新时间：2026年09月03日 星期四 
 
 
 
