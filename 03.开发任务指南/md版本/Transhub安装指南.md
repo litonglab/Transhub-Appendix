@@ -151,7 +151,7 @@ git clone https://github.com/ravinet/mahimahi
 ```Bash
 cd mahimahi
 
-# （用make工具编译mahimahi）
+# （用make工具编译mahimahi，如果遇到g++版本问题，参考下文常见问题）
 ./autogen.sh && ./configure && make
 
 # 安装
@@ -172,6 +172,28 @@ exit
 ![TE3RbizHCoFjTLxuF55cZAWKnMh\.png](images/TE3RbizHCoFjTLxuF55cZAWKnMh.png)
 
 ![NFKGbRVAro8MZUxej9kc3TEuncc\.png](images/NFKGbRVAro8MZUxej9kc3TEuncc.png)
+
+- 常见问题：如果遇到g++版本问题
+
+
+
+![g++version](./images/g++version.jpg)
+
+由于最新的mahimahi官方仓库的g++版本高于ubuntu18、20版本自带的g++，需要回退mahimahi版本
+
+```sh
+   cd mahimahi
+   
+   # 1. 删除编译文件
+   git clean -fdx
+   
+   # 2. 更换mahimahi版本
+   git fetch origin pull/148/head:mahimahi-gcc7-gcc9
+   git checkout mahimahi-gcc7-gcc9
+   
+   # 3. 重新编译
+   ./autogen.sh && ./configure && make
+```
 
 
 
